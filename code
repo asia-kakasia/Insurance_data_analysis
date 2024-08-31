@@ -1,0 +1,157 @@
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.impute import SimpleImputer
+import matplotlib.pyplot as plt
+import csv
+%matplotlib inline
+import seaborn as sns
+
+df = pd.read_csv('insurance.csv')
+
+# Calculate average charges by sex
+avg_charges_by_sex = df.groupby('sex')['charges'].mean().reset_index()
+
+plt.figure(figsize=(8, 6))
+sns.barplot(x='sex', y='charges', data=avg_charges_by_sex, palette='viridis')
+plt.title('Average Charges by Sex')
+plt.xlabel('Sex')
+plt.ylabel('Average Charges')
+plt.show()
+
+# Create a pivot table
+pivot_table = df.pivot_table(values='charges', index='age', columns='bmi', aggfunc='mean')
+
+# Create a heatmap
+plt.figure(figsize=(12, 8))
+sns.heatmap(pivot_table, cmap='coolwarm', annot=True, fmt=".1f", linewidths=.5)
+plt.title('Heatmap of Charges by Age and BMI')
+plt.xlabel('BMI')
+plt.ylabel('Age')
+plt.show()
+
+# Create a pair plot
+sns.pairplot(df[['age', 'bmi', 'charges']], diag_kind='kde', palette='viridis')
+plt.suptitle('Pair Plot of Age, BMI, and Charges', y=1.02)
+plt.show()
+
+# Create a facet grid
+g = sns.FacetGrid(df, col='smoker', height=6, aspect=1.2)
+g.map(sns.histplot, 'age', bins=30, kde=True, color='blue')
+g.set_axis_labels('Age', 'Count')
+g.set_titles('{col_name} Smoker')
+g.add_legend()
+plt.suptitle('Distribution of Age by Smoking Status', y=1.02)
+plt.show()
+
+# Calculate mean and standard deviation of charges by number of children
+mean_charges_by_children = df.groupby('children')['charges'].mean().reset_index()
+std_charges_by_children = df.groupby('children')['charges'].std().reset_index()
+
+# Merge mean and std data
+mean_std_charges_by_children = pd.merge(mean_charges_by_children, std_charges_by_children, on='children', suffixes=('_mean', '_std'))
+
+# Create a bar plot with error bars
+plt.figure(figsize=(10, 6))
+plt.bar(mean_std_charges_by_children['children'], mean_std_charges_by_children['charges_mean'], yerr=mean_std_charges_by_children['charges_std'], capsize=5, color='skyblue')
+plt.xlabel('Number of Children')
+plt.ylabel('Average Charges')
+plt.title('Average Charges by Number of Children with Error Bars')
+plt.show()
+
+# Calculate proportions of smokers vs. non-smokers
+smoker_counts = df['smoker'].value_counts()
+
+# Create a pie chart
+plt.figure(figsize=(8, 8))
+plt.pie(smoker_counts, labels=smoker_counts.index, autopct='%1.1f%%', colors=['#ff9999','#66b3ff'])
+plt.title('Proportion of Smokers vs. Non-Smokers')
+plt.show()
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Create a joint plot
+plt.figure(figsize=(10, 6))
+sns.jointplot(x='bmi', y='charges', data=df, kind='reg', color='green')
+plt.suptitle('Joint Plot of BMI vs. Charges', y=1.02)
+plt.show()
+
+plt.figure(figsize=(12, 6))
+sns.swarmplot(x='region', y='charges', data=df, palette='Set2')
+plt.title('Swarm Plot of Charges by Region')
+plt.xlabel('Region')
+plt.ylabel('Charges')
+plt.show()
+
+# Calculate the correlation matrix
+correlation_matrix = df[['age', 'bmi', 'children', 'charges']].corr()
+
+# Create a heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
+plt.title('Correlation Heatmap of Numerical Variables')
+plt.show()
+
+# Calculate the correlation matrix
+correlation_matrix = df[['age', 'bmi', 'children', 'charges']].corr()
+
+# Create a heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
+plt.title('Correlation Heatmap of Numerical Variables')
+plt.show()
+
+from sklearn.metrics import mean_squared_error
+
+from mpl_toolkits.mplot3d import Axes3D
+
+# Prepare data
+x = df['age']
+y = df['bmi']
+z = df['charges']
+
+# Create a 3D surface plot
+fig = plt.figure(figsize=(12, 8))
+ax = fig.add_subplot(111, projection='3d')
+scatter = ax.scatter(x, y, z, c=z, cmap='viridis')
+
+ax.set_xlabel('Age')
+ax.set_ylabel('BMI')
+ax.set_zlabel('Charges')
+ax.set_title('3D Surface Plot of Charges by Age and BMI')
+
+plt.colorbar(scatter, ax=ax, label='Charges')
+plt.show()
+
+from sklearn.model_selection import train_test_split
+
+# Define predictors and response
+X = df[['age', 'bmi', 'children']]
+y = df['charges']
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Initialize and fit the model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Predict
+y_pred = model.predict(X_test)
+
+# Print coefficients
+print(f"Coefficients: {model.coef_}")
+print(f"Intercept: {model.intercept_}")
+
+# Plot the predictions
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x=y_test, y=y_pred, color='blue')
+plt.xlabel('True Charges')
+plt.ylabel('Predicted Charges')
+plt.title('Multiple Linear Regression Predictions')
+plt.show()
+
+# Print model performance
+mse = mean_squared_error(y_test, y_pred)
+print(f"Mean Squared Error: {mse:.2f}")
